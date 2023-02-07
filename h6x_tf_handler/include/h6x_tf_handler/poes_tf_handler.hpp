@@ -57,12 +57,15 @@ public:
 
   bool tfSrc2Dist(PoseStamped &) noexcept;
   bool tfSrc2Dist(const PoseStamped &, PoseStamped &) noexcept;
+  bool getDistPoseToSrc(PoseStamped &);
 
   bool configure();
   bool activate(const std::chrono::nanoseconds = 5s);
+  bool deactivate();
   bool cleanup();
 
 private:
+  bool transform(const PoseStamped &, PoseStamped &, const std::string &);
   bool doTransform(const PoseStamped &, PoseStamped &);
 };
 }  // namespace h6x_tf_handler

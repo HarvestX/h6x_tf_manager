@@ -57,6 +57,14 @@ bool PoseTfHandler::tfSrc2Dist(const PoseStamped & in, PoseStamped & out) noexce
   return this->doTransform(in, out);
 }
 
+bool PoseTfHandler::getDistPoseToSrc(PoseStamped & dist_pose)
+{
+  tf2::toMsg(tf2::Transform::getIdentity(), dist_pose.pose);
+  dist_pose.header.frame_id = this->dist_frame_id_;
+  dist_pose.header.stamp = this->clock_if_->get_clock()->now();
+  return this->transform(dist_pose, dist_pose, this->src_frame_id_);
+}
+
 bool PoseTfHandler::configure()
 {
   this->tf_buffer_ = std::make_shared<tf2_ros::Buffer>(this->clock_if_->get_clock());
@@ -94,11 +102,49 @@ bool PoseTfHandler::activate(const std::chrono::nanoseconds timeout)
   return true;
 }
 
+bool PoseTfHandler::deactivate()
+{
+  // Nothing to do
+  return true;
+}
+
 bool PoseTfHandler::cleanup()
 {
   this->tf_listener_.reset();
   this->tf_buffer_.reset();
   return true;
+}
+
+bool PoseTfHandler::transform(
+  const PoseStamped & input_pose, PoseStamped & transformed_pose, const std::string & target_frame)
+{
+  static const double timeout = 0.3;
+  try {
+    transformed_pose = this->tf_buffer_->transform(
+      input_pose, target_frame, tf2::durationFromSec(timeout));
+    return true;
+  } catch (const tf2::LookupException & e) {
+    RCLCPP_ERROR(
+      this->logging_if_->get_logger(),
+      "No Transform available for looking up target frame: %s", e.what());
+  } catch (const tf2::ConnectivityException & e) {
+    RCLCPP_ERROR(
+      this->logging_if_->get_logger(),
+      "Connectivity Error looking up target frame: %s", e.what());
+  } catch (const tf2::ExtrapolationException & e) {
+    RCLCPP_ERROR(
+      this->logging_if_->get_logger(),
+      "Extrapolation Error looking up target frame: %s", e.what());
+  } catch (const tf2::TimeoutException & e) {
+    RCLCPP_ERROR(this->logging_if_->get_logger(), "Transform timeout");
+  } catch (const tf2::TransformException & e) {
+    RCLCPP_ERROR(
+      this->logging_if_->get_logger(),
+      "Failed to transform from %s -> %s",
+      this->dist_frame_id_.c_str(), this->src_frame_id_.c_str());
+  }
+
+  return false;
 }
 
 bool PoseTfHandler::doTransform(const PoseStamped & in, PoseStamped & out)
