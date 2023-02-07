@@ -57,7 +57,7 @@ public:
 
   bool tfSrc2Dist(PoseStamped &) noexcept;
   bool tfSrc2Dist(const PoseStamped &, PoseStamped &) noexcept;
-  bool getDistPoseToSrc(PoseStamped &);
+  bool getDist2Src(PoseStamped &);
 
   bool configure();
   bool activate(const std::chrono::nanoseconds = 5s);

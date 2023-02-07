@@ -57,7 +57,7 @@ bool PoseTfHandler::tfSrc2Dist(const PoseStamped & in, PoseStamped & out) noexce
   return this->doTransform(in, out);
 }
 
-bool PoseTfHandler::getDistPoseToSrc(PoseStamped & dist_pose)
+bool PoseTfHandler::getDist2Src(PoseStamped & dist_pose)
 {
   tf2::toMsg(tf2::Transform::getIdentity(), dist_pose.pose);
   dist_pose.header.frame_id = this->dist_frame_id_;
